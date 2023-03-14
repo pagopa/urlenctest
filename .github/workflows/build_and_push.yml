@@ -1,0 +1,41 @@
+name: Build and push
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      id-token: write
+    
+    steps:
+      #
+      # Checkout the source code.
+      #
+      - name: Checkout the source code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      #
+      # Setup the JDK.
+      #
+      - name: Setup the JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      #
+      # Build native image + Docker build + Docker login + Docker push
+      #
+      - name: Build native image + Docker build + Docker login + Docker push
+        run: |
+          mvn clean package -Pnative --no-transfer-progress
+          docker build -f src/main/docker/Dockerfile.native-micro -t ghcr.io/${{ github.repository }}:latest .
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push -a ghcr.io/${{ github.repository }}
