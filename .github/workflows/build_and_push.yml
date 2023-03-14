@@ -7,9 +7,6 @@ jobs:
   build_and_push:
     runs-on: ubuntu-latest
     
-    permissions:
-      id-token: write
-    
     steps:
       #
       # Checkout the source code.
